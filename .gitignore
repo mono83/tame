@@ -1,0 +1,7 @@
+/.idea/
+/dev/
+/release/*
+!release/.gitkeep
+*.iml
+/*.txt
+/*.json
