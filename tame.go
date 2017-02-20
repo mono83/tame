@@ -8,7 +8,7 @@ import (
 
 func main() {
 	if err := cmd.TameCmd.Execute(); err != nil {
-		fmt.Println("Execution error occured:", err)
+		fmt.Println("Execution error occurred:", err)
 		os.Exit(1)
 	}
 }
