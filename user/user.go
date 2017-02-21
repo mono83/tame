@@ -10,6 +10,9 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/url"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -19,25 +22,32 @@ type User struct {
 	UserAgent string
 	// HTTP Referer
 	Referer string
+	// Cookies
+	cookies map[string][]*http.Cookie
 	// Other HTTP headers
 	Header map[string]string
 
-	client http.Client
+	m      sync.Mutex
+	client *http.Client
 	log    wd.Watchdog
 }
 
 // New creates new HTTP user.
 func New() *User {
-	return &User{
+	u := &User{
 		Header: map[string]string{
 			"Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
 			"Accept-Encoding": "gzip, deflate, sdch, br",
 			"Accept-Language": "en-US,en;q=0.8,ru;q=0.6,uk;q=0.4,pl;q=0.2",
 		},
+		cookies:   map[string][]*http.Cookie{},
+		client:    &http.Client{},
 		UserAgent: userAgents[rand.Intn(len(userAgents))],
-		client:    http.Client{},
 		log:       wd.NewLogger("user"),
 	}
+
+	u.client.Jar = u
+	return u
 }
 
 // NewRequest builds and returns new request of desired type with headers injected
@@ -120,4 +130,55 @@ func (u *User) Get(addr string) (*page.Page, error) {
 	}
 
 	return p, nil
+}
+
+// SetCookies handles the receipt of the cookies in a reply for the
+// given URL.  It may or may not choose to save the cookies, depending
+// on the jar's policy and implementation.
+func (u *User) SetCookies(url *url.URL, cookies []*http.Cookie) {
+	u.m.Lock()
+	u.cookies[url.Host] = cookies
+	// Invalidating old cookies
+	now := time.Now()
+	for h, cs := range u.cookies {
+		newList := []*http.Cookie{}
+		for _, c := range cs {
+			if c.Expires.After(now) || len(c.RawExpires) == 0 {
+				newList = append(newList, c)
+			}
+		}
+		u.cookies[h] = newList
+	}
+	u.m.Unlock()
+}
+
+// Cookies returns the cookies to send in a request for the given URL.
+// It is up to the implementation to honor the standard cookie use
+// restrictions such as in RFC 6265.
+func (u *User) Cookies(url *url.URL) []*http.Cookie {
+	return u.cookies[url.Host]
+}
+
+// GetCookie returns cookie by its name
+func (u *User) GetCookie(url *url.URL, name string) (string, bool) {
+	if url == nil || len(name) == 0 {
+		return "", false
+	}
+
+	u.m.Lock()
+	defer u.m.Unlock()
+
+	list, ok := u.cookies[url.Host]
+	if !ok {
+		return "", false
+	}
+
+	name = strings.ToLower(name)
+	for _, c := range list {
+		if name == strings.ToLower(c.Name) {
+			return c.Value, true
+		}
+	}
+
+	return "", false
 }

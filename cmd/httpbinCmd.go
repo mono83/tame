@@ -8,10 +8,20 @@ import (
 )
 
 var httpbinCmd = &cobra.Command{
-	Use:   "httpbin",
+	Use:   "httpbin [name]",
 	Short: "Runs self tests using https://httpbin.org",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		for _, a := range asserts {
+		toUse := asserts
+		if len(args) == 1 {
+			toUse = []assertion{}
+			for _, a := range asserts {
+				if a.name == args[0] {
+					toUse = append(toUse, a)
+				}
+			}
+		}
+
+		for _, a := range toUse {
 			u := user.New()
 			err := a.assert(u)
 			if err != nil {
@@ -139,6 +149,42 @@ var asserts = []assertion{
 
 			if page.StatusCode != 404 {
 				return fmt.Errorf("Expected 404, but got %d", page.StatusCode)
+			}
+
+			return nil
+		},
+	},
+	{
+		name: "Cookies",
+		assert: func(u *user.User) error {
+			page, err := u.Get("https://httpbin.org/cookies/set?foo=bar")
+			if err != nil {
+				return err
+			}
+
+			if v, ok := u.GetCookie(page.URL, "foo"); !ok || v != "bar" {
+				return errors.New("Cookie wasnt set")
+			}
+
+			// More cookie check
+			page, err = u.Get("https://httpbin.org/cookies")
+			if err != nil {
+				return err
+			}
+
+			if v, ok := u.GetCookie(page.URL, "foo"); !ok || v != "bar" {
+				return errors.New("Cookie wasnt set")
+			}
+
+			// Removing cookies
+			page, err = u.Get("https://httpbin.org/cookies/delete?foo")
+			if err != nil {
+				return err
+			}
+
+			cookieList := u.Cookies(page.URL)
+			if len(cookieList) != 0 {
+				return errors.New("Cookie wasnt deleted")
 			}
 
 			return nil
