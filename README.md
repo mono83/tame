@@ -12,4 +12,17 @@ u := user.New()
 
 // p contains html page with some getter methods
 p, err := u.Get("https://google.com")
+
+contentType := p.ContentType()         // Returns page content type
+html := p.AsString()                   // Returns body as string
+err := p.AsJson(/*pointer to struct*/) // Unmarhals JSON contents, same as JSON.Unmarshal
 ```
+
+## CLI
+
+Tame comes with CLI interface, backed by spf13 Cobra. Run `make release` to obtain executable, 
+then use following commands:
+
+* `agents` - Displays list of supported user agents
+* `httpbin` - Runs tests using httpbin.org
+* `fetch` - Downloads page

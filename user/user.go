@@ -42,7 +42,7 @@ func New() *User {
 		},
 		cookies:   map[string][]*http.Cookie{},
 		client:    &http.Client{},
-		UserAgent: userAgents[rand.Intn(len(userAgents))],
+		UserAgent: CommonUserAgents[rand.Intn(len(CommonUserAgents))],
 		log:       wd.NewLogger("user"),
 	}
 

@@ -1,11 +1,14 @@
 # Makefile configuration
 .DEFAULT_GOAL := help
-.PHONY: help fmt vet test cyclo lint buildlib release
+.PHONY: help deps travis release
 
-travis: ## Runs travis tasks
-	@mkdir -p release
+deps: ## Download dependencies
+	@echo "Downloading dependencies"
 	go get github.com/spf13/cobra
 	go get github.com/mono83/slf
+
+travis: deps ## Runs travis tasks
+	@mkdir -p release
 	go build -o release/tame tame.go
 	@echo "Running tests"
 	@release/tame httpbin
