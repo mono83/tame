@@ -20,6 +20,11 @@ type Page struct {
 	document *goquery.Document
 }
 
+// IsEmpty returns true if page byte content is empty
+func (p Page) IsEmpty() bool {
+	return len(p.Body) == 0
+}
+
 // ContentType returns content type of page and "application/octet-stream" as default
 func (p Page) ContentType() string {
 	ct := p.Header.Get("content-type")
