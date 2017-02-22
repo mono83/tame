@@ -15,7 +15,7 @@ var TameCmd = &cobra.Command{
 func init() {
 	var verbose bool
 
-	TameCmd.AddCommand(fetchCmd, httpbinCmd, agentsCmd)
+	TameCmd.AddCommand(fetchCmd, httpbinCmd, agentsCmd, mitmCmd, pageCmd)
 	TameCmd.SilenceUsage = true
 	TameCmd.SilenceErrors = true
 	TameCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
