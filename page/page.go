@@ -3,6 +3,7 @@ package page
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"net/url"
 	"time"
@@ -15,6 +16,8 @@ type Page struct {
 	Header     http.Header
 	Elapsed    time.Duration
 	Body       []byte
+
+	document *goquery.Document
 }
 
 // ContentType returns content type of page and "application/octet-stream" as default
