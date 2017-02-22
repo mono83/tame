@@ -23,7 +23,7 @@ var fetchCmd = &cobra.Command{
 		}
 
 		fmt.Println(page.AsString())
-		fmt.Println(page)
+		fmt.Println(page.String())
 
 		return nil
 	},

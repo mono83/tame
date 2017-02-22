@@ -88,10 +88,13 @@ func (u *User) Get(addr string) (*page.Page, error) {
 		return nil, err
 	}
 
+	// Injecting tracing
+	req, trace := addTracing(req)
+
 	// Sending request
 	log.Debug("Sending request to :addr")
-	before := time.Now()
 	resp, err := u.client.Do(req)
+	trace.Close()
 	if err != nil {
 		log.Error("Error while GET :addr - :err", wd.ErrParam(err))
 		return nil, err
@@ -117,7 +120,7 @@ func (u *User) Get(addr string) (*page.Page, error) {
 
 	// Reading response
 	p := &page.Page{
-		Elapsed:    time.Now().Sub(before),
+		Trace:      *trace,
 		URL:        req.URL,
 		Header:     resp.Header,
 		StatusCode: resp.StatusCode,

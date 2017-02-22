@@ -6,15 +6,15 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"net/url"
-	"time"
 )
 
 // Page represents HTTP response page
 type Page struct {
+	Trace Trace
+
 	URL        *url.URL
 	StatusCode int
 	Header     http.Header
-	Elapsed    time.Duration
 	Body       []byte
 
 	document *goquery.Document
@@ -38,12 +38,12 @@ func (p Page) ContentType() string {
 // String returns short string representation of page
 func (p Page) String() string {
 	return fmt.Sprintf(
-		"HTML [%d] %s %s with %d bytes fetched in %.2fs",
+		"HTML [%d] %s %s with %d bytes fetched in [%s]",
 		p.StatusCode,
 		p.URL.String(),
 		p.ContentType(),
 		len(p.Body),
-		p.Elapsed.Seconds(),
+		p.Trace.String(),
 	)
 }
 
