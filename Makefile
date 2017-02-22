@@ -6,6 +6,7 @@ deps: ## Download dependencies
 	@echo "Downloading dependencies"
 	go get github.com/spf13/cobra
 	go get github.com/mono83/slf
+	go get github.com/PuerkitoBio/goquery
 
 travis: deps ## Runs travis tasks
 	@mkdir -p release
