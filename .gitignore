@@ -5,3 +5,5 @@
 *.iml
 /*.txt
 /*.json
+/*.go
+/!tame.go

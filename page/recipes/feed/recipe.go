@@ -9,10 +9,10 @@ var recipeName = "feed"
 
 // Recipe is function, used to parse RSS content from page.
 func Recipe(p *page.Page, target interface{}) error {
-	ref, ok := target.(*Feed)
 	if p == nil {
 		return recipes.Error(recipeName, "Empty page provided")
 	}
+	ref, ok := target.(*Feed)
 	if !ok {
 		return recipes.Error(recipeName, "Recipe works only with *feed.Feed")
 	}

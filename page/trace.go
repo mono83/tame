@@ -18,7 +18,6 @@ type Trace struct {
 	Connection  time.Duration // TCP connection time
 	RequestSent time.Duration // Time until whole request was sent
 	Total       time.Duration // Total time
-	App         time.Duration // Application time (Total - RequestSent)
 }
 
 // Close closes trace and writes total time.
@@ -26,8 +25,12 @@ type Trace struct {
 func (t *Trace) Close() {
 	if t.Total.Nanoseconds() == 0 {
 		t.Total = time.Now().Sub(t.Init)
-		t.App = time.Duration(int64(t.Total) - int64(t.RequestSent))
 	}
+}
+
+// AppTime returns remote application time, calculated as Total - RequestSent
+func (t Trace) AppTime() time.Duration {
+	return time.Duration(int64(t.Total) - int64(t.RequestSent))
 }
 
 func (t Trace) String() string {
@@ -37,6 +40,6 @@ func (t Trace) String() string {
 		t.Connection.Seconds(),
 		t.RequestSent.Seconds(),
 		t.Total.Seconds(),
-		t.App.Seconds(),
+		t.AppTime().Seconds(),
 	)
 }
