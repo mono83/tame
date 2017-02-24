@@ -76,15 +76,15 @@ func (s handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		httpLog.Debug("Page :uri featched from cache", wd.StringParam("uri", uri))
 	}
 
-	// Page already loaded
-	w.WriteHeader(p.code)
-
 	// Writing headers
+	w.Header().Add("x-tame-original", uri)
 	for h, vv := range p.headers {
 		for _, v := range vv {
 			w.Header().Add(h, v)
 		}
 	}
+	// Page already loaded
+	w.WriteHeader(p.code)
 
 	// Writing body
 	w.Write(p.body)

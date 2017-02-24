@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"fmt"
 )
 
 // User represents new HTTP user.
@@ -130,6 +131,15 @@ func (u *User) Get(addr string) (*page.Page, error) {
 	if err != nil {
 		log.Error("Unable to read response body for :addr - :err", wd.ErrParam(err))
 		return nil, err
+	}
+
+	// Replacing URL if working using own buffer proxy
+	if xt := resp.Header.Get("x-tame-original"); xt != "" {
+		fmt.Println(xt)
+		xtu, xterr := url.Parse(xt)
+		if xterr == nil {
+			p.URL = xtu
+		}
 	}
 
 	return p, nil
