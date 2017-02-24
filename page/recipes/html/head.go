@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var headRecipe = "HTMLHead"
+var headRecipeErrors = recipes.ErrorBuilder{RecipeName: "HTMLHead"}
 
 // Head contains information, extracted from HTML head
 type Head struct {
@@ -31,23 +31,23 @@ type OpenGraph struct {
 // HeadRecipe parses HTML head into html.Head struct
 func HeadRecipe(p *page.Page, target interface{}) error {
 	if p == nil {
-		return recipes.Error(headRecipe, "Empty page provided")
+		return headRecipeErrors.ErrorEmptyPage()
 	}
 	ref, ok := target.(*Head)
 	if !ok {
-		return recipes.Error(headRecipe, "Recipe works only with *feed.Feed")
+		return headRecipeErrors.Error("Recipe works only with *feed.Feed")
 	}
 
 	// Reading document
 	doc, err := p.AsDOMSelection()
 	if err != nil {
-		return recipes.ErrorCaused(headRecipe, err)
+		return headRecipeErrors.CausedBy(err)
 	}
 
 	// Reading head
 	domHead := doc.Find("head")
 	if domHead.Size() != 1 {
-		return recipes.Errorf(headRecipe, "Expected 1 <head> tag, but found %d", domHead.Size())
+		return headRecipeErrors.Errorf("Expected 1 <head> tag, but found %d", domHead.Size())
 	}
 
 	head := Head{OpenGraph: OpenGraph{}}

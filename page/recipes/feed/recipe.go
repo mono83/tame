@@ -5,16 +5,16 @@ import (
 	"github.com/mono83/tame/page/recipes"
 )
 
-var recipeName = "feed"
+var recipeErrors = recipes.ErrorBuilder{RecipeName: "feed"}
 
 // Recipe is function, used to parse RSS content from page.
 func Recipe(p *page.Page, target interface{}) error {
 	if p == nil {
-		return recipes.Error(recipeName, "Empty page provided")
+		return recipeErrors.ErrorEmptyPage()
 	}
 	ref, ok := target.(*Feed)
 	if !ok {
-		return recipes.Error(recipeName, "Recipe works only with *feed.Feed")
+		return recipeErrors.Error("Recipe works only with *feed.Feed")
 	}
 
 	// Parsing ATOM contents
@@ -23,7 +23,7 @@ func Recipe(p *page.Page, target interface{}) error {
 		// Parsing RSS2 contents
 		r, ok = parseFeedContent(p.Body)
 		if !ok {
-			return recipes.Error(recipeName, "Unable to parse feed content")
+			return recipeErrors.Error("Unable to parse feed content")
 		}
 	}
 
