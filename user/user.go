@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"compress/zlib"
 	"errors"
+	"fmt"
 	"github.com/mono83/slf/wd"
 	"github.com/mono83/tame/page"
 	"io"
@@ -14,7 +15,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"fmt"
 )
 
 // User represents new HTTP user.
