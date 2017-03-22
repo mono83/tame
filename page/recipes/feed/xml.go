@@ -23,10 +23,11 @@ type item struct {
 	Link        string        `xml:"link"`
 	Description template.HTML `xml:"description"`
 	// Optional
-	Content    template.HTML `xml:"encoded"`
-	PubDate    string        `xml:"pubDate"`
-	Comments   string        `xml:"comments"`
-	Categories []string      `xml:"category"`
+	Content            template.HTML `xml:"encoded"`
+	PubDate            string        `xml:"pubDate"`
+	Comments           string        `xml:"comments"`
+	Categories         []string      `xml:"category"`
+	FeedBurnerOriginal string        `xml:"origLink"`
 }
 
 type atom1 struct {

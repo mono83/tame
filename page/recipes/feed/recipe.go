@@ -45,6 +45,9 @@ func Recipe(p *page.Page, target interface{}) error {
 		if len(i.Content) == 0 {
 			newItem.Content = string(i.Description)
 		}
+		if len(i.FeedBurnerOriginal) > 0 {
+			newItem.Link = i.FeedBurnerOriginal
+		}
 
 		f.Items = append(f.Items, newItem)
 	}
