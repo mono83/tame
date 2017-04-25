@@ -56,3 +56,40 @@ func (p Page) AsString() string {
 func (p Page) AsJSON(target interface{}) error {
 	return json.Unmarshal(p.Body, target)
 }
+
+// MarshalJSON is implementation of JSON parsing helpers
+func (p Page) MarshalJSON() ([]byte, error) {
+	m := map[string]interface{}{}
+	m["URL"] = p.URL.String()
+	m["StatusCode"] = p.StatusCode
+	m["Header"] = p.Header
+	m["Body"] = string(p.Body)
+
+	return json.Marshal(m)
+}
+
+// UnmarshalJSON is implementation of JSON parsing helpers
+func (p *Page) UnmarshalJSON(data []byte) error {
+	var m struct {
+		URL        string              `json:"URL"`
+		StatusCode int                 `json:"StatusCode"`
+		Header     map[string][]string `json:"Header"`
+		Body       string              `json:"body"`
+	}
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+
+	url, err := url.Parse(m.URL)
+	if err != nil {
+		return err
+	}
+
+	p.URL = url
+	p.Header = http.Header(m.Header)
+	p.StatusCode = m.StatusCode
+	p.Body = []byte(m.Body)
+
+	return nil
+}
