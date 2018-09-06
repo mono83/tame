@@ -3,8 +3,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/mono83/tame/page/recipes/html"
-	"github.com/mono83/tame/user"
+
+	"github.com/mono83/tame"
+	"github.com/mono83/tame/client"
+	"github.com/mono83/tame/goquery"
+	"github.com/mono83/tame/recipes/dom"
 	"github.com/spf13/cobra"
 )
 
@@ -15,23 +18,23 @@ var htmlHeadCmd = &cobra.Command{
 		if len(args) != 1 {
 			return errors.New("URL not provided")
 		}
-		// Making new user
-		u := user.New()
+		// Making new client
+		cl := client.New()
 
 		// Downloading remote page
-		page, err := u.Get(args[0])
+		doc, err := goquery.FromDocumentE(cl.Get(args[0]))
 		if err != nil {
 			return err
 		}
 
 		// Parsing
-		var h html.Head
-		err = html.HeadRecipe(page, &h)
-		if err != nil {
+		var h dom.Head
+		var og dom.OpenGraph
+		if err := tame.Unmarshal(doc, &h, &og); err != nil {
 			return err
 		}
 
-		fmt.Printf("%+v\n", h)
+		fmt.Printf("%+v\n\n%+v\n\n", h, og)
 		return nil
 	},
 }

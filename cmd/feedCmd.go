@@ -3,8 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/mono83/tame/page/recipes/feed"
-	"github.com/mono83/tame/user"
+
+	"github.com/mono83/tame"
+	"github.com/mono83/tame/client"
+	"github.com/mono83/tame/recipes/feed"
 	"github.com/spf13/cobra"
 )
 
@@ -15,19 +17,18 @@ var feedCmd = &cobra.Command{
 		if len(args) != 1 {
 			return errors.New("URL not provided")
 		}
-		// Making new user
-		u := user.New()
+		// Making new client
+		cl := client.New()
 
-		// Downloading remote page
-		page, err := u.Get(args[0])
+		// Downloading remote document
+		doc, err := cl.Get(args[0])
 		if err != nil {
 			return err
 		}
 
 		// Parsing
 		var f feed.Feed
-		err = feed.Recipe(page, &f)
-		if err != nil {
+		if err := tame.Unmarshal(doc, &f); err != nil {
 			return err
 		}
 
