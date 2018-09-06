@@ -12,6 +12,9 @@ type recipeByteReader interface {
 type recipeStringReader interface {
 	Unmarshal(string) error
 }
+type recipeDOMReader interface {
+	UnmarshalDOM(DOMSelection) error
+}
 
 // Unmarshal reads data from document to provided targets
 // Read operation is performed sequentially, first error occured
@@ -36,6 +39,15 @@ func Unmarshal(d Document, targets ...interface{}) error {
 		case json.Unmarshaler:
 			x := j.(json.Unmarshaler)
 			if err := x.UnmarshalJSON(d.GetBody()); err != nil {
+				return err
+			}
+		case recipeDOMReader:
+			dd, ok := d.(DOMDocument)
+			if !ok {
+				return errors.New("DOMDocument is required")
+			}
+			x := j.(recipeDOMReader)
+			if err := x.UnmarshalDOM(dd); err != nil {
 				return err
 			}
 		default:

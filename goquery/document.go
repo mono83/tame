@@ -1,0 +1,22 @@
+package goquery
+
+import (
+	"net/http"
+	"net/url"
+
+	"github.com/mono83/tame"
+)
+
+// document is tame.DOMDocument interface implementation
+type document struct {
+	url     url.URL
+	headers http.Header
+	body    []byte
+	wrapper
+}
+
+var d tame.DOMDocument = document{}
+
+func (d document) GetURL() url.URL         { return d.url }
+func (d document) GetHeaders() http.Header { return d.headers }
+func (d document) GetBody() []byte         { return d.body }
