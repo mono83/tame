@@ -1,12 +1,10 @@
-package user
+package client
 
 import (
 	"compress/gzip"
 	"compress/zlib"
 	"errors"
 	"fmt"
-	"github.com/mono83/slf/wd"
-	"github.com/mono83/tame/page"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -15,14 +13,20 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mono83/tame"
+	"github.com/mono83/xray"
+	"github.com/mono83/xray/args"
 )
 
-// User represents new HTTP user.
-type User struct {
-	// User-Agent, used by this user
+// Client represents new HTTP user session
+type Client struct {
+	// User-Agent, used by this client
 	UserAgent string
 	// HTTP Referer
 	Referer string
+	// Ray is xray.Ray logger
+	Ray xray.Ray
 	// Cookies
 	cookies map[string][]*http.Cookie
 	// Other HTTP headers
@@ -30,74 +34,70 @@ type User struct {
 
 	m      sync.Mutex
 	client *http.Client
-	log    wd.Watchdog
 }
 
 // New creates new HTTP user.
-func New() *User {
-	u := &User{
+func New() *Client {
+	c := &Client{
 		Header: map[string]string{
 			"Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
 			"Accept-Encoding": "gzip, deflate, sdch, br",
 			"Accept-Language": "en-US,en;q=0.8,ru;q=0.6,uk;q=0.4,pl;q=0.2",
 		},
+		Ray:       xray.ROOT.Fork().WithLogger("tame.client"),
 		cookies:   map[string][]*http.Cookie{},
 		client:    &http.Client{},
 		UserAgent: CommonUserAgents[rand.Intn(len(CommonUserAgents))],
-		log:       wd.NewLogger("user"),
 	}
 
-	u.client.Jar = u
-	return u
+	c.client.Jar = c
+	return c
 }
 
 // NewRequest builds and returns new request of desired type with headers injected
-func (u *User) NewRequest(method, addr string, body io.Reader) (*http.Request, error) {
-	u.log.Debug("Building request :method :addr", wd.StringParam("method", method), wd.StringParam("addr", addr))
+func (c *Client) NewRequest(method, addr string, body io.Reader) (*http.Request, error) {
+	c.Ray.Debug("Building request :method :addr", args.String{N: "method", V: method}, args.String{N: "addr", V: addr})
 	req, err := http.NewRequest(method, addr, body)
 	if err != nil {
 		return nil, err
 	}
 
 	// Injecting common headers
-	for name, value := range u.Header {
+	for name, value := range c.Header {
 		req.Header.Set(name, value)
 	}
 
 	// Injecting user agent
-	req.Header.Set("User-Agent", u.UserAgent)
+	req.Header.Set("User-Agent", c.UserAgent)
 
 	// Injecting referer
-	if len(u.Referer) > 0 {
-		req.Header.Set("Referer", u.Referer)
+	if len(c.Referer) > 0 {
+		c.Ray.Debug("Setting referer :referer", args.String{N: "referer", V: c.Referer})
+		req.Header.Set("Referer", c.Referer)
 	}
 
 	return req, nil
 }
 
 // Get performs GET request
-func (u *User) Get(addr string) (*page.Page, error) {
+func (c *Client) Get(addr string) (tame.Document, error) {
 	if len(addr) == 0 {
-		return nil, errors.New("Empty remote address")
+		return nil, errors.New("empty remote address")
 	}
-	log := u.log.WithParams(wd.StringParam("addr", addr))
+	log := c.Ray.With(args.String{N: "addr", V: addr})
 
 	// Building request
-	req, err := u.NewRequest("GET", addr, nil)
+	req, err := c.NewRequest("GET", addr, nil)
 	if err != nil {
-		log.Error("Error building GET request :addr - :err", wd.ErrParam(err))
+		log.Error("Error building GET request :addr - :err", args.Error{Err: err})
 		return nil, err
 	}
 
-	// Injecting tracing
-	req, trace := addTracing(req)
-
 	// Sending request
 	log.Debug("Sending request to :addr")
-	resp, err := u.client.Do(req)
-	trace.Close()
+	resp, err := c.client.Do(req)
 	if err != nil {
-		log.Error("Error while GET :addr - :err", wd.ErrParam(err))
+		log.Error("Error performing GET :addr - :err", args.Error{Err: err})
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -115,21 +115,20 @@ func (u *User) Get(addr string) (*page.Page, error) {
 		reader = resp.Body
 	}
 	if err != nil {
-		log.Error("Unable to establish reader - :err", wd.ErrParam(err))
+		log.Error("Unable to establish reader - :err", args.Error{Err: err})
 		return nil, err
 	}
 
 	// Reading response
-	p := &page.Page{
-		Trace:      *trace,
-		URL:        req.URL,
-		Header:     resp.Header,
-		StatusCode: resp.StatusCode,
+	doc := document{
+		url:    *req.URL,
+		header: resp.Header,
+		code:   resp.StatusCode,
 	}
 
-	p.Body, err = ioutil.ReadAll(reader)
+	doc.body, err = ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error("Unable to read response body for :addr - :err", wd.ErrParam(err))
+		log.Error("Unable to read response body for :addr - :err", args.Error{Err: err})
 		return nil, err
 	}
 
@@ -138,50 +137,50 @@ func (u *User) Get(addr string) (*page.Page, error) {
 		fmt.Println(xt)
 		xtu, xterr := url.Parse(xt)
 		if xterr == nil {
-			p.URL = xtu
+			doc.url = *xtu
 		}
 	}
 
-	return p, nil
+	return doc, nil
 }
 
 // SetCookies handles the receipt of the cookies in a reply for the
 // given URL.  It may or may not choose to save the cookies, depending
 // on the jar's policy and implementation.
-func (u *User) SetCookies(url *url.URL, cookies []*http.Cookie) {
-	u.m.Lock()
-	u.cookies[url.Host] = cookies
+func (c *Client) SetCookies(url *url.URL, cookies []*http.Cookie) {
+	c.m.Lock()
+	c.cookies[url.Host] = cookies
 	// Invalidating old cookies
 	now := time.Now()
-	for h, cs := range u.cookies {
+	for h, cs := range c.cookies {
 		newList := []*http.Cookie{}
 		for _, c := range cs {
 			if c.Expires.After(now) || len(c.RawExpires) == 0 {
 				newList = append(newList, c)
 			}
 		}
-		u.cookies[h] = newList
+		c.cookies[h] = newList
 	}
-	u.m.Unlock()
+	c.m.Unlock()
 }
 
 // Cookies returns the cookies to send in a request for the given URL.
 // It is up to the implementation to honor the standard cookie use
 // restrictions such as in RFC 6265.
-func (u *User) Cookies(url *url.URL) []*http.Cookie {
-	return u.cookies[url.Host]
+func (c *Client) Cookies(url *url.URL) []*http.Cookie {
+	return c.cookies[url.Host]
 }
 
 // GetCookie returns cookie by its name
-func (u *User) GetCookie(url *url.URL, name string) (string, bool) {
+func (c *Client) GetCookie(url *url.URL, name string) (string, bool) {
 	if url == nil || len(name) == 0 {
 		return "", false
 	}
 
-	u.m.Lock()
-	defer u.m.Unlock()
+	c.m.Lock()
+	defer c.m.Unlock()
 
-	list, ok := u.cookies[url.Host]
+	list, ok := c.cookies[url.Host]
 	if !ok {
 		return "", false
 	}

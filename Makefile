@@ -5,7 +5,7 @@
 deps: ## Download dependencies
 	@echo "Downloading dependencies"
 	go get github.com/spf13/cobra
-	go get github.com/mono83/slf
+	go get github.com/mono83/xray
 	go get github.com/PuerkitoBio/goquery
 	go get github.com/stretchr/testify/assert
 

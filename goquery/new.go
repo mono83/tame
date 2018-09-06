@@ -33,6 +33,15 @@ func FromDocument(d tame.Document) (tame.DOMDocument, error) {
 	}, nil
 }
 
+// FromDocumentE builds goquery implementation of tame.DOMDocument interface
+func FromDocumentE(d tame.Document, err error) (tame.DOMDocument, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	return FromDocument(d)
+}
+
 // FromResponse builds goquery implementation of tame.DOMDocument interface
 // from http.Response
 func FromResponse(res *http.Response) (tame.DOMDocument, error) {

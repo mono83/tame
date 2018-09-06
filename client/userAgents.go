@@ -1,4 +1,4 @@
-package user
+package client
 
 // CommonUserAgents contains list of user agents.
 var CommonUserAgents = []string{
