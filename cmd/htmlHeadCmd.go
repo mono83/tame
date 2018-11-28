@@ -34,7 +34,41 @@ var htmlHeadCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("%+v\n\n%+v\n\n", h, og)
+		colorHeader.Println("HTML Header")
+		colorKey.Print("Title        : ")
+		colorValue.Println(h.Title)
+		colorKey.Print("Engine       : ")
+		colorValue.Println(h.Engine)
+		colorKey.Print("Canonical URL: ")
+		colorValue.Println(h.URLCanonical)
+		colorKey.Print("Keywords     : ")
+		colorValue.Println(h.KeywordsCS())
+		colorKey.Print("Description  : ")
+		colorValue.Println(h.Description)
+		fmt.Println()
+
+		colorHeader.Println("Open Graph Data")
+		colorKey.Print("Site       : ")
+		colorValue.Println(og.SiteName)
+		colorKey.Print("Title      : ")
+		colorValue.Println(og.Title)
+		colorKey.Print("Type       : ")
+		colorValue.Println(og.Type)
+		colorKey.Print("Locale     : ")
+		colorValue.Println(og.Locale)
+		colorKey.Print("URL        : ")
+		colorValue.Println(og.URL)
+		colorKey.Print("Description: ")
+		colorValue.Println(og.Description)
+		if len(og.Images) > 0 {
+			colorKey.Println("Images")
+			for _, i := range og.Images {
+				colorKey.Print(" * ")
+				colorValue.Println(i.String())
+			}
+		}
+		fmt.Println()
+
 		return nil
 	},
 }

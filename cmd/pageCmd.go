@@ -19,7 +19,7 @@ var pageCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, a []string) error {
 		if len(a) != 1 {
 			cmd.Usage()
-			return errors.New("Not enough arguments")
+			return errors.New("not enough arguments")
 		}
 
 		addr := a[0]
@@ -84,7 +84,7 @@ func (s handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 
 	} else {
-		log.Debug("Page :uri featched from cache")
+		log.Debug("Page :uri fetched from cache")
 	}
 
 	// Writing headers

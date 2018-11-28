@@ -18,6 +18,11 @@ type Head struct {
 	URLCanonical *url.URL
 }
 
+// KeywordsCS returns comma separated keywords
+func (h *Head) KeywordsCS() string {
+	return strings.Join(h.Keywords, ",")
+}
+
 // UnmarshalDOM fills struct contents from DOM source
 func (h *Head) UnmarshalDOM(src tame.DOMSelection) error {
 	if src == nil {
@@ -39,7 +44,19 @@ func (h *Head) UnmarshalDOM(src tame.DOMSelection) error {
 	var keywordsString string
 	domHead.ReadAttr("meta[name=\"keywords\"]", "content", &keywordsString)
 	if len(keywordsString) > 0 {
-		head.Keywords = strings.Split(keywordsString, " ")
+		var kw []string
+		if strings.Index(keywordsString, ",") > 0 {
+			kw = strings.Split(keywordsString, ",")
+		} else {
+			kw = strings.Split(keywordsString, " ")
+		}
+
+		for _, k := range kw {
+			k = strings.TrimSpace(k)
+			if len(k) > 0 {
+				head.Keywords = append(head.Keywords, k)
+			}
+		}
 	}
 	// Article tags
 	domHead.Find("meta[property=\"article:tag\"]").Each(func(s tame.DOMSelection) {

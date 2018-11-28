@@ -3,8 +3,6 @@ package goquery
 import (
 	"net/http"
 	"net/url"
-
-	"github.com/mono83/tame"
 )
 
 // document is tame.DOMDocument interface implementation
@@ -14,8 +12,6 @@ type document struct {
 	body    []byte
 	wrapper
 }
-
-var d tame.DOMDocument = document{}
 
 func (d document) GetURL() url.URL         { return d.url }
 func (d document) GetHeaders() http.Header { return d.headers }

@@ -11,8 +11,9 @@ import (
 )
 
 var feedCmd = &cobra.Command{
-	Use:   "feed url",
-	Short: "Downloads and parses feed (RSS or Atom)",
+	Use:     "feed url",
+	Aliases: []string{"rss"},
+	Short:   "Downloads and parses feed (RSS or Atom)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return errors.New("URL not provided")
@@ -32,9 +33,13 @@ var feedCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Feed title:      ", f.Title)
-		fmt.Println("Feed link:       ", f.Link)
-		fmt.Println("Feed description:", f.Description)
+		colorKey.Print("Feed title      : ")
+		colorValue.Println(f.Title)
+		colorKey.Print("Feed link       : ")
+		colorValue.Println(f.Link)
+		colorKey.Print("Feed description: ")
+		colorValue.Println(f.Description)
+
 		for _, i := range f.Items {
 			fmt.Println(" * ", i.Title)
 			fmt.Println("   ", i.Link)
