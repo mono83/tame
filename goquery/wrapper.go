@@ -18,6 +18,10 @@ func (w wrapper) Size() int {
 	return w.sel.Size()
 }
 
+func (w wrapper) AsText() string {
+	return w.sel.Text()
+}
+
 func (w wrapper) Find(query string) tame.DOMSelection {
 	return wrapper{sel: w.sel.Find(query)}
 }

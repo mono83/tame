@@ -11,9 +11,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var node string
+
 var htmlHeadCmd = &cobra.Command{
-	Use:   "head url",
-	Short: "Parses HTML head metadata from URL",
+	Use:     "head url",
+	Aliases: []string{"get"},
+	Short:   "Parses HTML head metadata from URL",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return errors.New("URL not provided")
@@ -69,6 +72,32 @@ var htmlHeadCmd = &cobra.Command{
 		}
 		fmt.Println()
 
+		if len(node) > 0 {
+			n := dom.Text{Selector: node}
+			if err := tame.Unmarshal(doc, &n); err != nil {
+				return err
+			}
+
+			colorHeader.Println("Extracted node")
+			colorKey.Print("DOM Selector: ")
+			colorValue.Println(n.Selector)
+			if len(n.Links) > 0 {
+				colorKey.Println("Links within: ")
+				for _, l := range n.Links {
+					colorKey.Print(" * ")
+					colorValue.Println(l.Location)
+					colorValue.Println("  ", l.Text)
+				}
+			}
+			colorKey.Println("Plain text:")
+			colorValue.Println(n.PlainText)
+			fmt.Println()
+		}
+
 		return nil
 	},
+}
+
+func init() {
+	htmlHeadCmd.Flags().StringVarP(&node, "node", "n", "", "HTML Node to extract")
 }

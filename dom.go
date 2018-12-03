@@ -10,6 +10,8 @@ type DOMSelection interface {
 
 	ReadText(query string, target *string) error
 	ReadAttr(query, attr string, target *string) error
+
+	AsText() string
 }
 
 // DOMDocument is an extended version of document, that
