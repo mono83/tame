@@ -1,6 +1,9 @@
 package feed
 
-import "errors"
+import (
+	"errors"
+	"github.com/mono83/tame/clean"
+)
 
 // Feed contains feed contents.
 type Feed struct {
@@ -50,4 +53,19 @@ func (f *Feed) Unmarshal(src []byte) error {
 
 	*f = fc
 	return nil
+}
+
+// CleanUTM returns new Feed instance with UTM markers cleared from all links
+func (f Feed) CleanUTM() Feed {
+	n := Feed{
+		Title:       f.Title,
+		Link:        clean.UTMMarks(f.Link),
+		Description: f.Description,
+	}
+
+	for _, i := range f.Items {
+		n.Items = append(n.Items, i.CleanUTM())
+	}
+
+	return n
 }
