@@ -110,7 +110,7 @@ func (c *Client) Get(addr string) (tame.Document, error) {
 		ray.Error("Error performing GET :url - :err", args.Error{Err: err})
 		return nil, err
 	}
-	defer silent(resp.Body.Close())
+	defer silent(resp.Body.Close)
 
 	// Checking against compressed data
 	var reader io.ReadCloser
@@ -118,15 +118,15 @@ func (c *Client) Get(addr string) (tame.Document, error) {
 	case "gzip":
 		ray.Trace("Detected GZIP encoding")
 		reader, err = gzip.NewReader(resp.Body)
-		defer silent(reader.Close())
+		defer silent(reader.Close)
 	case "deflate":
 		ray.Trace("Detected DEFLATE encoding")
 		reader, err = zlib.NewReader(resp.Body)
-		defer silent(reader.Close())
+		defer silent(reader.Close)
 	case "br":
 		ray.Trace("Detected BROTLI encoding")
 		reader, err = brotli.NewReader(resp.Body, nil)
-		defer silent(reader.Close())
+		defer silent(reader.Close)
 	default:
 		reader = resp.Body
 	}
@@ -221,5 +221,6 @@ func (c *Client) GetCookie(url *url.URL, name string) (string, bool) {
 	return "", false
 }
 
-func silent(error) {
+func silent(x func() error) {
+	_ = x()
 }
