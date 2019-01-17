@@ -7,6 +7,7 @@ deps: ## Download dependencies
 	go get github.com/spf13/cobra
 	go get github.com/mono83/xray
 	go get github.com/PuerkitoBio/goquery
+	go get github.com/dsnet/compress
 	go get github.com/stretchr/testify/assert
 
 travis: deps ## Runs travis tasks

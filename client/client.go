@@ -4,7 +4,8 @@ import (
 	"compress/gzip"
 	"compress/zlib"
 	"errors"
-	"fmt"
+	"github.com/dsnet/compress/brotli"
+	"github.com/mono83/tame/log"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -56,7 +57,9 @@ func New() *Client {
 
 // NewRequest builds and returns new request of desired type with headers injected
 func (c *Client) NewRequest(method, addr string, body io.Reader) (*http.Request, error) {
-	c.Ray.Debug("Building request :method :addr", args.String{N: "method", V: method}, args.String{N: "addr", V: addr})
+	ray := c.Ray.Fork().With(log.URL(addr), log.Method(method))
+
+	ray.Debug("Building request :method :url")
 	req, err := http.NewRequest(method, addr, body)
 	if err != nil {
 		return nil, err
@@ -65,14 +68,20 @@ func (c *Client) NewRequest(method, addr string, body io.Reader) (*http.Request,
 	// Injecting common headers
 	for name, value := range c.Header {
 		req.Header.Set(name, value)
+		ray.Trace("Setting header :name = :value", args.Name(name), args.String{N: "value", V: value})
 	}
 
 	// Injecting user agent
+	ray.Trace("Injecting user agent :name", args.Name(c.UserAgent))
 	req.Header.Set("User-Agent", c.UserAgent)
+
+	// Accepting gzip
+	ray.Trace("Injecting accept encoding")
+	req.Header.Add("Accept-Encoding", "gzip")
 
 	// Injecting referer
 	if len(c.Referer) > 0 {
-		c.Ray.Debug("Setting referer :referer", args.String{N: "referer", V: c.Referer})
+		ray.Debug("Setting referer :referer", args.String{N: "referer", V: c.Referer})
 		req.Header.Set("Referer", c.Referer)
 	}
 
@@ -84,38 +93,45 @@ func (c *Client) Get(addr string) (tame.Document, error) {
 	if len(addr) == 0 {
 		return nil, errors.New("empty remote address")
 	}
-	log := c.Ray.With(args.String{N: "addr", V: addr})
+	ray := c.Ray.Fork().With(log.URL(addr))
 
 	// Building request
 	req, err := c.NewRequest("GET", addr, nil)
 	if err != nil {
-		log.Error("Error building GET request :addr - :err", args.Error{Err: err})
+		ray.Error("Error building GET request :url - :err", args.Error{Err: err})
 		return nil, err
 	}
 
 	// Sending request
-	log.Debug("Sending request to :addr")
+	before := time.Now()
+	ray.Debug("Sending request to :addr")
 	resp, err := c.client.Do(req)
 	if err != nil {
-		log.Error("Error performing GET :addr - :err", args.Error{Err: err})
+		ray.Error("Error performing GET :url - :err", args.Error{Err: err})
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer silent(resp.Body.Close())
 
 	// Checking against compressed data
 	var reader io.ReadCloser
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
+		ray.Trace("Detected GZIP encoding")
 		reader, err = gzip.NewReader(resp.Body)
-		defer reader.Close()
+		defer silent(reader.Close())
 	case "deflate":
+		ray.Trace("Detected DEFLATE encoding")
 		reader, err = zlib.NewReader(resp.Body)
-		defer reader.Close()
+		defer silent(reader.Close())
+	case "br":
+		ray.Trace("Detected BROTLI encoding")
+		reader, err = brotli.NewReader(resp.Body, nil)
+		defer silent(reader.Close())
 	default:
 		reader = resp.Body
 	}
 	if err != nil {
-		log.Error("Unable to establish reader - :err", args.Error{Err: err})
+		ray.Error("Unable to establish reader - :err", args.Error{Err: err})
 		return nil, err
 	}
 
@@ -128,13 +144,23 @@ func (c *Client) Get(addr string) (tame.Document, error) {
 
 	doc.body, err = ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error("Unable to read response body for :addr - :err", args.Error{Err: err})
+		ray.Error("Unable to read response body for :url - :err", args.Error{Err: err})
 		return nil, err
 	}
 
+	delta := time.Now().Sub(before)
+
+	ray.Debug(
+		"Document received with :code code, :count bytes in :delta",
+		args.Int{N: "code", V: doc.code},
+		args.Count(len(doc.body)),
+		args.Delta(delta),
+	)
+
+	ray.InBytes(doc.body)
+
 	// Replacing URL if working using own buffer proxy
 	if xt := resp.Header.Get("x-tame-original"); xt != "" {
-		fmt.Println(xt)
 		xtu, xterr := url.Parse(xt)
 		if xterr == nil {
 			doc.url = *xtu
@@ -153,7 +179,7 @@ func (c *Client) SetCookies(url *url.URL, cookies []*http.Cookie) {
 	// Invalidating old cookies
 	now := time.Now()
 	for h, cs := range c.cookies {
-		newList := []*http.Cookie{}
+		var newList []*http.Cookie
 		for _, c := range cs {
 			if c.Expires.After(now) || len(c.RawExpires) == 0 {
 				newList = append(newList, c)
@@ -193,4 +219,7 @@ func (c *Client) GetCookie(url *url.URL, name string) (string, bool) {
 	}
 
 	return "", false
+}
+
+func silent(error) {
 }
