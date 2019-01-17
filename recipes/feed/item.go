@@ -4,10 +4,18 @@ import "github.com/mono83/tame/clean"
 
 // Item contains feed item content.
 type Item struct {
-	Title   string
-	Link    string
-	Content string
-	Tags    []string
+	Title     string      // Feed item title
+	Link      string      // Feed item link
+	Short     string      // Feed item short content
+	Content   string      // Feed item full content
+	Tags      []string    // Feed item categories
+	Enclosure []Enclosure // Feed item enclosures
+}
+
+// Enclosure represents media enclosures
+type Enclosure struct {
+	Link string // Media location
+	Type string // Media type
 }
 
 // CleanUTM returns new Item instance with UTM markers cleared from link
