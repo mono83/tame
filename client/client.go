@@ -104,7 +104,7 @@ func (c *Client) Get(addr string) (tame.Document, error) {
 
 	// Sending request
 	before := time.Now()
-	ray.Debug("Sending request to :addr")
+	ray.Debug("Sending request to :url")
 	resp, err := c.client.Do(req)
 	if err != nil {
 		ray.Error("Error performing GET :url - :err", args.Error{Err: err})
