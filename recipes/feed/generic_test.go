@@ -27,6 +27,30 @@ var genericRssSrc = `
 
 </rss>`
 
+var genericFeedburnerSrc = `
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+
+<channel>
+  <title>W3Schools Home Page</title>
+  <link>https://www.w3schools.com</link>
+  <description>Free web building tutorials</description>
+  <language>en-US</language>
+  <item>
+    <title>RSS Tutorial</title>
+    <link>https://www.w3schools.com/xml/xml_rss.asp</link>
+	<origLink>https://www.w3schools.com/xml/original.asp</origLink>
+    <description>New RSS tutorial on W3Schools</description>
+  </item>
+  <item>
+    <title>XML Tutorial</title>
+    <link>https://www.w3schools.com/xml</link>
+    <description>New XML tutorial on W3Schools</description>
+  </item>
+</channel>
+
+</rss>`
+
 var genericZenSrc = `
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
@@ -130,6 +154,28 @@ func TestParseGenericRss(t *testing.T) {
 		if assert.Len(t, f.Items(), 2) {
 			assert.Equal(t, "RSS Tutorial", f.Items()[0].Title)
 			assert.Equal(t, "https://www.w3schools.com/xml/xml_rss.asp", f.Items()[0].Link())
+			assert.Equal(t, "New RSS tutorial on W3Schools", f.Items()[0].Summary())
+
+			assert.Equal(t, "XML Tutorial", f.Items()[1].Title)
+			assert.Equal(t, "https://www.w3schools.com/xml", f.Items()[1].Link())
+			assert.Equal(t, "New XML tutorial on W3Schools", f.Items()[1].Summary())
+
+			assert.Len(t, f.Items()[0].Enclosures, 0)
+		}
+	}
+}
+
+func TestParseGenericFeedburner(t *testing.T) {
+	if f, err := parseGeneric([]byte(genericFeedburnerSrc)); assert.NoError(t, err) {
+		assert.Equal(t, "W3Schools Home Page", f.Title())
+		assert.Equal(t, "https://www.w3schools.com", f.Link())
+		assert.Equal(t, "Free web building tutorials", f.Description)
+		assert.Equal(t, "", f.Updated)
+		assert.Equal(t, "en-US", f.Language)
+
+		if assert.Len(t, f.Items(), 2) {
+			assert.Equal(t, "RSS Tutorial", f.Items()[0].Title)
+			assert.Equal(t, "https://www.w3schools.com/xml/original.asp", f.Items()[0].Link())
 			assert.Equal(t, "New RSS tutorial on W3Schools", f.Items()[0].Summary())
 
 			assert.Equal(t, "XML Tutorial", f.Items()[1].Title)

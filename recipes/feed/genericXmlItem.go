@@ -3,9 +3,10 @@ package feed
 import "github.com/mono83/tame/clean"
 
 type genericXMLItem struct {
-	Title    string   `xml:"title"`
-	LinkHref linkHref `xml:"link"`
-	Rating   string   `xml:"rating"`
+	Title        string   `xml:"title"`
+	LinkHref     linkHref `xml:"link"`
+	LinkOriginal string   `xml:"origLink"`
+	Rating       string   `xml:"rating"`
 
 	ShortSummary     string   `xml:"summary"`
 	ShortDescription string   `xml:"description"`
@@ -16,7 +17,7 @@ type genericXMLItem struct {
 }
 
 func (g genericXMLItem) Link() string {
-	return any(g.LinkHref.Value, g.LinkHref.Text)
+	return any(g.LinkOriginal, any(g.LinkHref.Value, g.LinkHref.Text))
 }
 
 func (g genericXMLItem) Summary() string {
@@ -27,9 +28,13 @@ func (g genericXMLItem) ToItem() Item {
 	i := Item{
 		Title:   clean.Trim(g.Title),
 		Link:    clean.Trim(g.Link()),
-		Short:   clean.Trim(g.ShortSummary),
-		Content: clean.Trim(g.ShortDescription),
+		Short:   clean.Trim(g.Summary()),
+		Content: clean.Trim(g.Content),
 		Tags:    clean.Strings(g.Categories, clean.Trim),
+	}
+
+	if len(i.Content) == 0 {
+		i.Content = i.Short
 	}
 
 	for _, c := range g.Enclosures {
