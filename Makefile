@@ -10,10 +10,8 @@ deps: ## Download dependencies
 	go get github.com/dsnet/compress
 	go get github.com/stretchr/testify/assert
 
-travis: deps ## Runs travis tasks
-	@mkdir -p release
-	go build -o release/tame tame.go
-	@echo "Running tests"
+travis: deps test local ## Runs travis tasks
+	@echo "Running external tests"
 	@release/tame httpbin
 
 local: ## Builds local binary
@@ -26,6 +24,10 @@ build: local ## Builds binaries
 	GOOS="darwin" GOARCH="amd64" go build -o release/tame-darwin64 tame/tame.go
 
 release: deps build ## Builds release
+
+test:
+	@echo "Running tests"
+	@go test ./...
 
 help:
 	@grep --extended-regexp '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
