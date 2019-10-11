@@ -6,8 +6,8 @@ import (
 
 	"github.com/mono83/tame"
 	"github.com/mono83/tame/client"
-	"github.com/mono83/tame/goquery"
 	"github.com/mono83/tame/recipes/dom"
+	"github.com/mono83/tame/util/goquery"
 	"github.com/spf13/cobra"
 )
 

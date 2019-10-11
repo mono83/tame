@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mono83/tame"
-	"github.com/mono83/tame/goquery"
+	"github.com/mono83/tame/util/goquery"
 )
 
 var headHTML = `

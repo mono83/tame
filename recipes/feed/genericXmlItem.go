@@ -1,6 +1,6 @@
 package feed
 
-import "github.com/mono83/tame/clean"
+import "github.com/mono83/tame/util/clean"
 
 type genericXMLItem struct {
 	Title        string   `xml:"title"`

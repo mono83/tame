@@ -2,7 +2,7 @@ package feed
 
 import (
 	"encoding/xml"
-	"github.com/mono83/tame/clean"
+	"github.com/mono83/tame/util/clean"
 )
 
 type genericXMLFeed struct {

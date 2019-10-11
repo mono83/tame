@@ -1,6 +1,6 @@
 package feed
 
-import "github.com/mono83/tame/clean"
+import "github.com/mono83/tame/util/clean"
 
 // Item contains feed item content.
 type Item struct {

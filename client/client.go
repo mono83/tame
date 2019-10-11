@@ -5,7 +5,6 @@ import (
 	"compress/zlib"
 	"errors"
 	"github.com/dsnet/compress/brotli"
-	"github.com/mono83/tame/log"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -57,7 +56,7 @@ func New() *Client {
 
 // NewRequest builds and returns new request of desired type with headers injected
 func (c *Client) NewRequest(method, addr string, body io.Reader) (*http.Request, error) {
-	ray := c.Ray.Fork().With(log.URL(addr), log.Method(method))
+	ray := c.Ray.Fork().With(args.URL(addr), args.Method(method))
 
 	ray.Debug("Building request :method :url")
 	req, err := http.NewRequest(method, addr, body)
@@ -93,7 +92,7 @@ func (c *Client) Get(addr string) (tame.Document, error) {
 	if len(addr) == 0 {
 		return nil, errors.New("empty remote address")
 	}
-	ray := c.Ray.Fork().With(log.URL(addr))
+	ray := c.Ray.Fork().With(args.URL(addr))
 
 	// Building request
 	req, err := c.NewRequest("GET", addr, nil)

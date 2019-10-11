@@ -1,7 +1,7 @@
 package feed
 
 import (
-	"github.com/mono83/tame/clean"
+	"github.com/mono83/tame/util/clean"
 )
 
 // Feed contains feed contents.
