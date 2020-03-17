@@ -1,12 +1,18 @@
 package feed
 
-import "github.com/mono83/tame/util/clean"
+import (
+	"time"
+
+	"github.com/mono83/tame/util/clean"
+)
 
 type genericXMLItem struct {
 	Title        string   `xml:"title"`
 	LinkHref     linkHref `xml:"link"`
 	LinkOriginal string   `xml:"origLink"`
 	Rating       string   `xml:"rating"`
+
+	PublishTimeString string `xml:"pubDate"`
 
 	ShortSummary     string   `xml:"summary"`
 	ShortDescription string   `xml:"description"`
@@ -35,6 +41,11 @@ func (g genericXMLItem) ToItem() Item {
 
 	if len(i.Content) == 0 {
 		i.Content = i.Short
+	}
+
+	// Parsing publishing time
+	if t, err := time.Parse(time.RFC1123, g.PublishTimeString); err == nil {
+		i.PublishedAt = t.UTC()
 	}
 
 	for _, c := range g.Enclosures {
