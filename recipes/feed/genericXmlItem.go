@@ -17,6 +17,7 @@ type genericXMLItem struct {
 	ShortSummary     string   `xml:"summary"`
 	ShortDescription string   `xml:"description"`
 	Content          string   `xml:"http://purl.org/rss/1.0/modules/content/ encoded"`
+	ContentYandex    string   `xml:"http://news.yandex.ru full-text"`
 	Categories       []string `xml:"category"`
 
 	Enclosures []genericXMLEnclosure `xml:"enclosure"`
@@ -43,8 +44,14 @@ func (g genericXMLItem) ToItem() Item {
 		i.Content = i.Short
 	}
 
+	if len(i.Content) == 0 && len(g.ContentYandex) > 0 {
+		i.Content = clean.Trim(g.ContentYandex)
+	}
+
 	// Parsing publishing time
 	if t, err := time.Parse(time.RFC1123, g.PublishTimeString); err == nil {
+		i.PublishedAt = t.UTC()
+	} else if t, err = time.Parse(time.RFC1123Z, g.PublishTimeString); err == nil {
 		i.PublishedAt = t.UTC()
 	}
 
