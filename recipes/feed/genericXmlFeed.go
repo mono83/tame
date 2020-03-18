@@ -1,8 +1,11 @@
 package feed
 
 import (
+	"bytes"
 	"encoding/xml"
+
 	"github.com/mono83/tame/util/clean"
+	"golang.org/x/net/html/charset"
 )
 
 type genericXMLFeed struct {
@@ -58,7 +61,9 @@ type linkHref struct {
 
 func parseGeneric(src []byte) (*genericXMLFeed, error) {
 	var v genericXMLFeed
-	err := xml.Unmarshal(src, &v)
+	decoder := xml.NewDecoder(bytes.NewBuffer(src))
+	decoder.CharsetReader = charset.NewReaderLabel
+	err := decoder.Decode(&v)
 	if err != nil {
 		return nil, err
 	}

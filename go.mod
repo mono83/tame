@@ -9,4 +9,5 @@ require (
 	github.com/mono83/xray v1.0.2
 	github.com/spf13/cobra v0.0.6
 	github.com/stretchr/testify v1.2.2
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 )
