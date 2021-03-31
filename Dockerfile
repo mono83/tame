@@ -1,12 +1,11 @@
 # build stage
 FROM golang:1.13.1-stretch AS build-env
-ENV APP_DIR=$GOPATH/src/github.com/mono83/tame
-ADD . $APP_DIR
-RUN cd $APP_DIR && make build && mv $APP_DIR/release/tame /goapp
+WORKDIR /tame
+ADD . /tame
+RUN mkdir -p release && go test ./... && CGO_ENABLED=0 go build -o release/tame app/tame.go
 
 # final stage
 FROM alpine:3.10
 WORKDIR /app
-COPY --from=build-env /goapp /app/tame
+COPY --from=build-env /tame/release/tame /app/tame
 ENTRYPOINT ["./tame"]
-CMD []
